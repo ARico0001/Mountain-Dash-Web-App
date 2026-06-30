@@ -1,0 +1,227 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mountain Dash - My Profile</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+
+        .profile-container {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <script>
+        const allowedOrigin = "https://localhost:7145";
+        if (window.location.origin !== allowedOrigin) { window.location.href = allowedOrigin; }
+    </script>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="dashboard.html">Mountain Dash</a>
+            <div class="d-flex gap-2">
+                <a href="dashboard.html" class="btn btn-outline-light btn-sm"><i class="bi bi-house-door-fill"></i> Board</a>
+                <button id="logout-btn" class="btn btn-danger btn-sm"><i class="bi bi-box-arrow-right"></i> Log Out</button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="profile-view" class="container my-5 profile-container">
+        <div class="row g-4">
+
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 p-4 rounded-3 bg-white">
+                    <h4 class="fw-bold mb-3">Profile Settings</h4>
+                    <p class="text-muted small">Logged in as: <span id="user-email" class="fw-bold text-primary"></span></p>
+                    <hr>
+                    <form id="profile-form">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Display Name</label>
+                            <input type="text" id="profile-name" class="form-control" placeholder="e.g. Neighbor Amanda">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">About Me (Bio)</label>
+                            <textarea id="profile-bio" class="form-control" rows="3" placeholder="Tell the mountain community a bit about yourself..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">Save Settings</button>
+                    </form>
+                    <div id="save-status" class="mt-2 text-center small fw-semibold"></div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0 p-4 rounded-3 bg-white mb-4">
+                    <h4 class="fw-bold mb-3"><i class="bi bi-clipboard-check text-success me-2"></i>My Posted Requests</h4>
+                    <div class="row g-2" id="my-posts-container">
+                        <div class="text-center text-muted py-3">Loading your posts...</div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 p-4 rounded-3 bg-white">
+                    <h4 class="fw-bold mb-3"><i class="bi bi-person-workspace text-primary me-2"></i>My Commitments</h4>
+                    <div class="row g-2" id="my-commitments-container">
+                        <div class="text-center text-muted py-3">Loading your workspace...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const SUPABASE_URL = "https://hxrhnemlxptlcvpvmpwu.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_U24SEjua7BNgn5cJID6QLQ_ZuR1Q1Vt";
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let activeUser = null;
+
+        // A. Load or Upsert User Profile Details
+        async function loadProfile(user) {
+            document.getElementById("user-email").textContent = user.email;
+
+            let { data: profile, error } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", user.id)
+                .maybeSingle();
+
+            if (profile) {
+                document.getElementById("profile-name").value = profile.display_name || "";
+                document.getElementById("profile-bio").value = profile.bio || "";
+            }
+        }
+
+        document.getElementById("profile-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const status = document.getElementById("save-status");
+            const name = document.getElementById("profile-name").value.trim();
+            const bio = document.getElementById("profile-bio").value.trim();
+
+            status.textContent = "Saving...";
+            status.className = "mt-2 text-center small fw-semibold text-dark";
+
+            const { error } = await supabase
+                .from("profiles")
+                .upsert({ id: activeUser.id, display_name: name, bio: bio });
+
+            if (error) {
+                status.textContent = "Error saving settings: " + error.message;
+                status.className = "mt-2 text-center small fw-semibold text-danger";
+            } else {
+                status.textContent = "Profile updated successfully!";
+                status.className = "mt-2 text-center small fw-semibold text-success";
+            }
+        });
+
+        // B. Load Filtered History Lists
+        async function loadJobHistories(userEmail) {
+            const postsContainer = document.getElementById("my-posts-container");
+            const commitmentsContainer = document.getElementById("my-commitments-container");
+
+            // 1. Fetch posts created by this user
+            let { data: posts } = await supabase.from("jobs").select("*").eq("posted_by", userEmail).order("created_at", { ascending: false });
+            if (!posts || posts.length === 0) {
+                postsContainer.innerHTML = `<div class="text-muted small text-center py-2">You haven't posted any jobs yet.</div>`;
+            } else {
+                postsContainer.innerHTML = posts.map(job => {
+                    let actionBtn = "";
+                    if (job.status === "pending") {
+                        actionBtn = `<button class="btn btn-sm btn-success fw-bold btn-complete-job" data-job-id="${job.id}">Approve Completion</button>`;
+                    } else if (job.status === "completed") {
+                        actionBtn = `<span class="badge bg-success">Completed & Settled</span>`;
+                    } else {
+                        actionBtn = `<span class="badge bg-secondary">Open Marketplace Pool</span>`;
+                    }
+
+                    return `
+                        <div class="col-12 border rounded p-2 mb-1 d-flex justify-content-between align-items-center bg-light">
+                            <div>
+                                <strong class="d-block">${escapeHtml(job.title)}</strong>
+                                <span class="small text-muted">Payout: $${Number(job.payout).toFixed(2)} • Worker: ${escapeHtml(job.accepted_by || "None yet")}</span>
+                            </div>
+                            <div>${actionBtn}</div>
+                        </div>`;
+                }).join("");
+            }
+
+            // 2. Fetch jobs accepted or backed up by this user
+            let { data: commitments } = await supabase.from("jobs").select("*").order("created_at", { ascending: false });
+            let filteredCommitments = commitments?.filter(job => job.accepted_by === userEmail || job.backup_offers?.includes(userEmail)) || [];
+
+            if (filteredCommitments.length === 0) {
+                commitmentsContainer.innerHTML = `<div class="text-muted small text-center py-2">You aren't assigned to any jobs right now.</div>`;
+            } else {
+                commitmentsContainer.innerHTML = filteredCommitments.map(job => {
+                    let roleBadge = job.accepted_by === userEmail ?
+                        `<span class="badge bg-warning text-dark">Primary Worker</span>` :
+                        `<span class="badge bg-secondary">In Backup Line</span>`;
+
+                    if (job.status === 'completed') {
+                        roleBadge = `<span class="badge bg-success">Job Finalized</span>`;
+                    }
+
+                    return `
+                        <div class="col-12 border rounded p-2 mb-1 d-flex justify-content-between align-items-center bg-light">
+                            <div>
+                                <strong class="d-block">${escapeHtml(job.title)}</strong>
+                                <span class="small text-muted">Posted by: ${escapeHtml(job.posted_by)} • Payout: $${Number(job.payout).toFixed(2)}</span>
+                            </div>
+                            <div>${roleBadge}</div>
+                        </div>`;
+                }).join("");
+            }
+
+            // Bind Approval Logic
+            document.querySelectorAll(".btn-complete-job").forEach(btn => {
+                btn.addEventListener("click", async (e) => {
+                    const id = e.target.getAttribute("data-job-id");
+                    e.target.disabled = true;
+                    e.target.textContent = "Closing...";
+
+                    await supabase.from("jobs").update({ status: "completed" }).eq("id", id);
+                    loadJobHistories(userEmail);
+                });
+            });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // C. Core Access Guard
+        async function checkAccess() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = "index.html";
+            } else {
+                activeUser = session.user;
+                document.getElementById("profile-view").style.display = "block";
+                await loadProfile(activeUser);
+                await loadJobHistories(activeUser.email);
+            }
+        }
+
+        window.onload = () => {
+            checkAccess();
+            document.getElementById("logout-btn").addEventListener("click", async () => {
+                await supabase.auth.signOut();
+                window.location.href = "index.html";
+            });
+        };
+    </script>
+</body>
+</html>

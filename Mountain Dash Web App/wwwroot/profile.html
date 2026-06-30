@@ -1,0 +1,442 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mountain Dash - My Profile</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+
+        .profile-container {
+            display: none;
+        }
+
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            background: #e9ecef;
+        }
+
+        .star-rating {
+            font-size: 1.5rem;
+            color: #dee2e6;
+            cursor: pointer;
+        }
+
+            .star-rating .bi-star-fill.active {
+                color: #ffc107;
+            }
+    </style>
+</head>
+<body>
+
+    <script>
+        const allowedOrigin = "https://localhost:7145";
+        if (window.location.origin !== allowedOrigin) { window.location.href = allowedOrigin; }
+    </script>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="dashboard.html">Mountain Dash</a>
+            <div class="d-flex gap-2">
+                <a href="dashboard.html" class="btn btn-outline-light btn-sm"><i class="bi bi-house-door-fill"></i> Board</a>
+                <button id="logout-btn" class="btn btn-danger btn-sm"><i class="bi bi-box-arrow-right"></i> Log Out</button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="profile-view" class="container my-5 profile-container">
+        <div class="row g-4">
+
+            <div class="col-md-5">
+                <div class="card shadow-sm border-0 p-4 rounded-3 bg-white">
+
+                    <div id="verification-status-box" class="alert alert-warning text-center mb-4 py-2" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <span id="verification-msg" class="small fw-bold">Profile Incomplete: Save your Name & Address to unlock gigs.</span>
+                    </div>
+
+                    <h4 class="fw-bold mb-1">Profile Settings</h4>
+                    <p class="text-muted small mb-3">Logged in as: <span id="user-email" class="fw-bold text-primary"></span></p>
+                    <hr>
+
+                    <div class="text-center mb-4">
+                        <img id="avatar-img-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=default" class="avatar-preview border shadow-sm mb-2" alt="Avatar">
+                    </div>
+
+                    <form id="profile-form">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-muted d-block mb-1">Profile Picture (Optional)</label>
+                            <span class="text-secondary d-block small mb-2"><i class="bi bi-info-circle me-1"></i> Not required, but adding a face helps build trust!</span>
+                            <input type="file" id="profile-avatar-file" class="form-control" accept="image/*">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-danger">Full Name *</label>
+                            <input type="text" id="profile-fullname" class="form-control" placeholder="First and Last Name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Community Display Name</label>
+                            <input type="text" id="profile-name" class="form-control" placeholder="e.g. Neighbor Amanda">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-danger">Street Address *</label>
+                            <input type="text" id="profile-address" class="form-control" placeholder="e.g. 123 Mountain View Dr" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-muted">Phone Number (Optional)</label>
+                            <input type="tel" id="profile-phone" class="form-control" placeholder="e.g. (555) 000-0000">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">About Me (Bio)</label>
+                            <textarea id="profile-bio" class="form-control" rows="3" placeholder="Tell the mountain community a bit about yourself..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">Update Profile Details</button>
+                    </form>
+                    <div id="save-status" class="mt-2 text-center small fw-semibold"></div>
+                </div>
+            </div>
+
+            <div class="col-md-7">
+                <div class="card shadow-sm border-0 p-4 rounded-3 bg-white mb-4">
+                    <h4 class="fw-bold mb-3"><i class="bi bi-clipboard-check text-success me-2"></i>My Posted Requests</h4>
+                    <div class="row g-2" id="my-posts-container">
+                        <div class="text-center text-muted py-3">Loading your posts...</div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 p-4 rounded-3 bg-white">
+                    <h4 class="fw-bold mb-3"><i class="bi bi-person-workspace text-primary me-2"></i>My Commitments</h4>
+                    <div class="row g-2" id="my-commitments-container">
+                        <div class="text-center text-muted py-3">Loading your workspace...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold" id="reviewModalLabel"><i class="bi bi-star-fill text-warning me-2"></i>Leave a Helper Review</h5>
+                </div>
+                <form id="review-form">
+                    <div class="modal-body">
+                        <p class="text-muted small">Thank you for finalizing this job! Please rate the assistance provided by <span id="review-worker-email" class="fw-bold text-dark"></span>:</p>
+
+                        <div class="mb-3 text-center">
+                            <div class="star-rating d-inline-flex gap-1" id="star-container">
+                                <i class="bi bi-star-fill" data-value="1"></i>
+                                <i class="bi bi-star-fill" data-value="2"></i>
+                                <i class="bi bi-star-fill" data-value="3"></i>
+                                <i class="bi bi-star-fill" data-value="4"></i>
+                                <i class="bi bi-star-fill" data-value="5"></i>
+                            </div>
+                            <input type="hidden" id="selected-rating" value="0">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Written Feedback (Optional)</label>
+                            <textarea id="review-text" class="form-control" rows="3" placeholder="Write a quick thank-you note or feedback details..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="submit" class="btn btn-primary fw-bold px-4" id="submit-review-btn">Submit Review & Close Job</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const SUPABASE_URL = "https://hxrhnemlxptlcvpvmpwu.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_U24SEjua7BNgn5cJID6QLQ_ZuR1Q1Vt";
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let activeUser = null;
+        let reviewJobId = null;
+        let reviewWorkerEmail = null;
+        let reviewModalInstance = null;
+        let currentAvatarUrl = "";
+
+        // UI Verification State Switcher
+        function updateVerificationUI(hasName, hasAddress) {
+            const box = document.getElementById("verification-status-box");
+            const msg = document.getElementById("verification-msg");
+
+            if (hasName && hasAddress) {
+                box.className = "alert alert-success border-success text-center mb-4 py-2 shadow-sm";
+                msg.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i> Profile Verified & Active!`;
+            } else {
+                box.className = "alert alert-warning border-warning text-center mb-4 py-2";
+                msg.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i> Profile Incomplete: Save your Name & Address to unlock gigs.`;
+            }
+        }
+
+        // A. Load User Profile Details
+        async function loadProfile(user) {
+            document.getElementById("user-email").textContent = user.email;
+
+            let { data: profile } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", user.id)
+                .maybeSingle();
+
+            if (profile) {
+                currentAvatarUrl = profile.avatar_url || "";
+                if (currentAvatarUrl) {
+                    document.getElementById("avatar-img-preview").src = currentAvatarUrl;
+                }
+
+                const hasName = !!profile.full_name?.trim();
+                const hasAddress = !!profile.street_address?.trim();
+
+                document.getElementById("profile-fullname").value = profile.full_name || "";
+                document.getElementById("profile-name").value = profile.display_name || "";
+                document.getElementById("profile-address").value = profile.street_address || "";
+                document.getElementById("profile-phone").value = profile.phone_number || "";
+                document.getElementById("profile-bio").value = profile.bio || "";
+
+                updateVerificationUI(hasName, hasAddress);
+            } else {
+                updateVerificationUI(false, false);
+            }
+        }
+
+        // B. Form Submit Handler (Upload and Upsert)
+        document.getElementById("profile-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const status = document.getElementById("save-status");
+
+            const fileInput = document.getElementById("profile-avatar-file");
+            const fullName = document.getElementById("profile-fullname").value.trim();
+            const name = document.getElementById("profile-name").value.trim();
+            const address = document.getElementById("profile-address").value.trim();
+            const phone = document.getElementById("profile-phone").value.trim();
+            const bio = document.getElementById("profile-bio").value.trim();
+
+            status.textContent = "Processing details...";
+            status.className = "mt-2 text-center small fw-semibold text-dark";
+
+            try {
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const fileExtension = file.name.split('.').pop();
+                    const filePath = `${activeUser.id}/avatar.${fileExtension}`;
+
+                    const { error: uploadError } = await supabase.storage
+                        .from('Mountain Dash')
+                        .upload(filePath, file, { upsert: true });
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: urlData } = supabase.storage
+                        .from('Mountain Dash')
+                        .getPublicUrl(filePath);
+
+                    currentAvatarUrl = urlData.publicUrl;
+                }
+
+                const { error } = await supabase
+                    .from("profiles")
+                    .upsert({
+                        id: activeUser.id,
+                        avatar_url: currentAvatarUrl,
+                        full_name: fullName,
+                        display_name: name,
+                        street_address: address,
+                        phone_number: phone,
+                        bio: bio
+                    });
+
+                if (error) throw error;
+
+                status.textContent = "Profile updated successfully!";
+                status.className = "mt-2 text-center small fw-semibold text-success";
+
+                updateVerificationUI(!!fullName, !!address);
+            } catch (err) {
+                status.textContent = "Error saving settings: " + err.message;
+                status.className = "mt-2 text-center small fw-semibold text-danger";
+            }
+        });
+
+        // C. Local FileReader Instant UI Preview Event Listener
+        document.getElementById("profile-avatar-file").addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    document.getElementById("avatar-img-preview").src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // D. Load Filtered History Lists
+        async function loadJobHistories(userEmail) {
+            const postsContainer = document.getElementById("my-posts-container");
+            const commitmentsContainer = document.getElementById("my-commitments-container");
+
+            let { data: posts } = await supabase.from("jobs").select("*").eq("posted_by", userEmail).order("created_at", { ascending: false });
+            if (!posts || posts.length === 0) {
+                postsContainer.innerHTML = `<div class="text-muted small text-center py-2">You haven't posted any jobs yet.</div>`;
+            } else {
+                postsContainer.innerHTML = posts.map(job => {
+                    let actionBtn = "";
+                    if (job.status === "pending") {
+                        actionBtn = `<button class="btn btn-sm btn-success fw-bold btn-trigger-review" data-job-id="${job.id}" data-worker="${escapeHtml(job.accepted_by)}">Approve & Complete</button>`;
+                    } else if (job.status === "completed") {
+                        actionBtn = `<span class="badge bg-success">Completed & Settled</span>`;
+                    } else {
+                        actionBtn = `<span class="badge bg-secondary">Open Marketplace Pool</span>`;
+                    }
+
+                    return `
+                            <div class="col-12 border rounded p-2 mb-1 d-flex justify-content-between align-items-center bg-light">
+                                <div>
+                                    <strong class="d-block">${escapeHtml(job.title)}</strong>
+                                    <span class="small text-muted">Payout: $${Number(job.payout).toFixed(2)} • Worker: ${escapeHtml(job.accepted_by || "None yet")}</span>
+                                </div>
+                                <div>${actionBtn}</div>
+                            </div>`;
+                }).join("");
+            }
+
+            let { data: commitments } = await supabase.from("jobs").select("*").order("created_at", { ascending: false });
+            let filteredCommitments = commitments?.filter(job => job.accepted_by === userEmail || job.backup_offers?.includes(userEmail)) || [];
+
+            if (filteredCommitments.length === 0) {
+                commitmentsContainer.innerHTML = `<div class="text-muted small text-center py-2">You aren't assigned to any jobs right now.</div>`;
+            } else {
+                commitmentsContainer.innerHTML = filteredCommitments.map(job => {
+                    let roleBadge = job.accepted_by === userEmail ?
+                        `<span class="badge bg-warning text-dark">Primary Worker</span>` :
+                        `<span class="badge bg-secondary">In Backup Line</span>`;
+
+                    if (job.status === 'completed') {
+                        roleBadge = `<span class="badge bg-success">Job Finalized</span>`;
+                    }
+
+                    return `
+                            <div class="col-12 border rounded p-2 mb-1 d-flex justify-content-between align-items-center bg-light">
+                                <div>
+                                    <strong class="d-block">${escapeHtml(job.title)}</strong>
+                                    <span class="small text-muted">Posted by: ${escapeHtml(job.posted_by)} • Payout: $${Number(job.payout).toFixed(2)}</span>
+                                </div>
+                                <div>${roleBadge}</div>
+                            </div>`;
+                }).join("");
+            }
+
+            document.querySelectorAll(".btn-trigger-review").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    reviewJobId = e.target.getAttribute("data-job-id");
+                    reviewWorkerEmail = e.target.getAttribute("data-worker");
+
+                    document.getElementById("review-worker-email").textContent = reviewWorkerEmail;
+                    resetReviewForm();
+
+                    const modalEl = document.getElementById('reviewModal');
+                    reviewModalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    reviewModalInstance.show();
+                });
+            });
+        }
+
+        function resetReviewForm() {
+            document.getElementById("selected-rating").value = "0";
+            document.getElementById("review-text").value = "";
+            document.querySelectorAll("#star-container i").forEach(star => star.classList.remove("active"));
+        }
+
+        document.querySelectorAll("#star-container i").forEach(star => {
+            star.addEventListener("click", (e) => {
+                const rating = parseInt(e.target.getAttribute("data-value"));
+                document.getElementById("selected-rating").value = rating;
+
+                document.querySelectorAll("#star-container i").forEach(s => {
+                    if (parseInt(s.getAttribute("data-value")) <= rating) {
+                        s.classList.add("active");
+                    } else {
+                        s.classList.remove("active");
+                    }
+                });
+            });
+        });
+
+        document.getElementById("review-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const ratingValue = parseInt(document.getElementById("selected-rating").value);
+            const reviewComment = document.getElementById("review-text").value.trim();
+
+            if (ratingValue === 0) {
+                alert("Please click on a star rating from 1 to 5 before submitting.");
+                return;
+            }
+
+            document.getElementById("submit-review-btn").disabled = true;
+            document.getElementById("submit-review-btn").textContent = "Finalizing Job...";
+
+            try {
+                await supabase.from("reviews").insert({
+                    job_id: reviewJobId,
+                    reviewer_email: activeUser.email,
+                    reviewee_email: reviewWorkerEmail,
+                    rating_stars: ratingValue,
+                    review_text: reviewComment
+                });
+
+                await supabase.from("jobs").update({ status: "completed" }).eq("id", reviewJobId);
+
+                reviewModalInstance.hide();
+                loadJobHistories(activeUser.email);
+            } catch (err) {
+                console.error(err);
+                reviewModalInstance.hide();
+            }
+        });
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // E. Core Access Guard
+        async function checkAccess() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = "index.html";
+            } else {
+                activeUser = session.user;
+                document.getElementById("profile-view").style.display = "block";
+                await loadProfile(activeUser);
+                await loadJobHistories(activeUser.email);
+            }
+        }
+
+        window.onload = () => {
+            checkAccess();
+            document.getElementById("logout-btn").addEventListener("click", async () => {
+                await supabase.auth.signOut();
+                window.location.href = "index.html";
+            });
+        };
+    </script>
+</body>
+</html>
