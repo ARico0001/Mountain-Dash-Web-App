@@ -1,0 +1,322 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mountain Dash - Payments & Payouts</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+
+        .payments-container {
+            display: none;
+        }
+
+        .method-card {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
+        }
+
+            .method-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            }
+
+            .method-card.selected {
+                border-color: #0d6efd;
+                background-color: #f0f7ff;
+            }
+    </style>
+</head>
+<body>
+
+   
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="dashboard.html">
+                <img src="logo.png"
+                     onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=100&q=80';"
+                     alt="Mountain Dash Logo"
+                     class="rounded-3 me-2 shadow-sm"
+                     style="width: 40px; height: 40px; object-fit: cover;">
+                <div>
+                    <span class="text-white mb-0 d-block lh-1" style="font-size: 1.25rem; letter-spacing: 0.5px;">Mountain</span>
+                    <span class="text-primary fw-semibold tracking-wider p-0 m-0" style="font-size: 0.8rem; text-transform: uppercase;">Dash</span>
+                </div>
+            </a>
+            <div class="d-flex gap-2">
+                <a href="dashboard.html" class="btn btn-outline-light btn-sm"><i class="bi bi-house-door-fill"></i> Board</a>
+                <a href="profile.html" class="btn btn-outline-light btn-sm"><i class="bi bi-person-fill"></i> My Profile</a>
+                <button id="logout-btn" class="btn btn-danger btn-sm"><i class="bi bi-box-arrow-right"></i> Log Out</button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="payments-view" class="container my-5 payments-container">
+        <div class="row g-4">
+
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm rounded-3 p-4 bg-white mb-4">
+                    <h4 class="fw-bold text-dark mb-3"><i class="bi bi-wallet2 me-2 text-primary"></i>Earnings Balance</h4>
+                    <p class="text-muted small">Funds collected from completing verified community mountain tasks.</p>
+
+                    <div class="bg-light p-4 rounded-3 text-center my-3 border">
+                        <span class="text-muted d-block small fw-semibold uppercase tracking-wider">Available for Cash Out</span>
+                        <h1 class="display-5 fw-bold text-success my-1" id="balance-display">$0.00</h1>
+                        <span class="text-muted extra-small" id="user-session-email">loading session...</span>
+                    </div>
+
+                    <button class="btn btn-success btn-lg w-100 fw-bold shadow-sm py-2 mt-2" id="trigger-payout-btn" disabled>
+                        <i class="bi bi-cash-coin me-2"></i>Request Secure Cash Out
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm rounded-3 p-4 bg-white">
+                    <h4 class="fw-bold text-dark mb-1"><i class="bi bi-credit-card-2-front me-2 text-primary"></i>Payout Distribution</h4>
+                    <p class="text-muted small mb-4">Select your preferred method to receive or settle mountain gig balances.</p>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <div class="card p-3 method-card h-100 text-center" id="method-stripe" onclick="selectPaymentMethod('stripe')">
+                                <i class="bi bi-stripe display-6 text-primary mb-2"></i>
+                                <div class="fw-bold small">Stripe Direct</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card p-3 method-card h-100 text-center" id="method-paypal" onclick="selectPaymentMethod('paypal')">
+                                <i class="bi bi-paypal display-6 text-info mb-2"></i>
+                                <div class="fw-bold small">PayPal Hub</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card p-3 method-card h-100 text-center" id="method-zelle" onclick="selectPaymentMethod('zelle')">
+                                <i class="bi bi-lightning-charge-fill display-6 text-warning mb-2"></i>
+                                <div class="fw-bold small">Zelle Transfer</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card p-3 method-card h-100 text-center" id="method-cash" onclick="selectPaymentMethod('cash')">
+                                <i class="bi bi-bank display-6 text-success mb-2"></i>
+                                <div class="fw-bold small">Cash on Delivery</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="method-details-form" class="bg-light p-3 rounded-3 border d-none">
+                        <h6 class="fw-bold mb-2 text-dark" id="form-title">Method Options</h6>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold" id="input-label">Account Details</label>
+                            <input type="text" id="payment-destination-input" class="form-control" placeholder="">
+                        </div>
+                        <button class="btn btn-primary btn-sm fw-bold px-3" id="save-method-settings-btn">Save Payment Routing</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="global-chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 1050;">
+        <button class="btn btn-primary rounded-circle shadow-lg p-3" id="chat-toggle-btn" style="width: 60px; height: 60px;">
+            <i class="bi bi-chat-dots-fill fs-4"></i>
+        </button>
+        <div class="card shadow-lg border-0 d-none" id="chat-window" style="width: 350px; height: 450px; position: absolute; bottom: 75px; right: 0;">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <span class="fw-bold"><i class="bi bi-chat-text me-2"></i>Mountain Chat</span>
+                <button type="button" class="btn-close btn-close-white btn-sm" id="chat-close-btn"></button>
+            </div>
+            <div class="card-body overflow-y-auto bg-light" id="chat-messages-box" style="height: 320px;"></div>
+            <div class="card-footer bg-white border-top">
+                <form id="chat-send-form" class="d-flex gap-2">
+                    <input type="text" id="chat-input" class="form-control form-control-sm" placeholder="Type a message..." required autocomplete="off">
+                    <button type="submit" class="btn btn-primary btn-sm px-3"><i class="bi bi-send-fill"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const SUPABASE_URL = "https://hxrhnemlxptlcvpvmpwu.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_U24SEjua7BNgn5cJID6QLQ_ZuR1Q1Vt";
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let activeUser = null;
+        let selectedMethod = "";
+        let currentEarnedTotal = 0;
+
+        window.selectPaymentMethod = function(method) {
+            selectedMethod = method;
+            document.querySelectorAll(".method-card").forEach(card => card.classList.remove("selected"));
+            document.getElementById(`method-${method}`).classList.add("selected");
+
+            const detailsForm = document.getElementById("method-details-form");
+            const formTitle = document.getElementById("form-title");
+            const inputLabel = document.getElementById("input-label");
+            const inputField = document.getElementById("payment-destination-input");
+
+            detailsForm.classList.remove("d-none");
+            inputField.value = "";
+
+            if (method === "stripe") {
+                formTitle.textContent = "Stripe Connect Settings";
+                inputLabel.textContent = "Stripe Account Email or Account ID *";
+                inputField.placeholder = "e.g. stripe-account@domain.com";
+            } else if (method === "paypal") {
+                formTitle.textContent = "PayPal Account Setup";
+                inputLabel.textContent = "Registered PayPal Email Destination *";
+                inputField.placeholder = "e.g. paypal-merchant@domain.com";
+            } else if (method === "zelle") {
+                formTitle.textContent = "Zelle Processing Gateway";
+                inputLabel.textContent = "Zelle Registered Mobile Phone Number or Email Address *";
+                inputField.placeholder = "e.g. 909-555-0199 or email@domain.com";
+            } else if (method === "cash") {
+                formTitle.textContent = "In-Person Cash Settlement";
+                inputLabel.textContent = "Special Drop-off Instructions / Terms (Optional)";
+                inputField.placeholder = "e.g. Handover upon completion of job.";
+            }
+        };
+
+        async function calculateUserEarnings() {
+            let { data: completedJobs, error } = await supabase
+                .from("jobs")
+                .select("payout")
+                .eq("accepted_by", activeUser.email)
+                .eq("status", "completed");
+
+            if (error) {
+                console.error("Error evaluating balance:", error);
+                return;
+            }
+
+            currentEarnedTotal = completedJobs ? completedJobs.reduce((acc, current) => acc + parseFloat(current.payout || 0), 0) : 0;
+            document.getElementById("balance-display").textContent = `$${currentEarnedTotal.toFixed(2)}`;
+
+            if (currentEarnedTotal > 0) {
+                document.getElementById("trigger-payout-btn").disabled = false;
+            }
+        }
+
+        document.getElementById("save-method-settings-btn").addEventListener("click", async () => {
+            const routingValue = document.getElementById("payment-destination-input").value.trim();
+            if (!routingValue && selectedMethod !== "cash") {
+                alert("Please complete the routing details before saving.");
+                return;
+            }
+
+            const { error } = await supabase.auth.updateUser({
+                data: {
+                    preferred_payout_type: selectedMethod,
+                    payout_routing_destination: routingValue
+                }
+            });
+
+            if (error) alert("Failed saving configuration: " + error.message);
+            else alert(`Successfully linked your ${selectedMethod.toUpperCase()} routing configuration!`);
+        });
+
+        document.getElementById("trigger-payout-btn").addEventListener("click", () => {
+            if (!selectedMethod) {
+                alert("Please select a payout processing channel on the right first.");
+                return;
+            }
+            alert(`Payout Processing Triggered!\nYour balance of $${currentEarnedTotal.toFixed(2)} is being batched for transfer via: ${selectedMethod.toUpperCase()}`);
+        });
+
+        async function verifySecureSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = "index.html";
+            } else {
+                activeUser = session.user;
+                document.getElementById("user-session-email").textContent = `Session: ${activeUser.email}`;
+                document.getElementById("payments-view").style.display = "block";
+
+                const meta = activeUser.user_metadata || {};
+                if (meta.preferred_payout_type) {
+                    selectPaymentMethod(meta.preferred_payout_type);
+                    document.getElementById("payment-destination-input").value = meta.payout_routing_destination || "";
+                }
+
+                calculateUserEarnings();
+                initChat();
+            }
+        }
+
+        // ==========================================
+        // GLOBAL CHAT ENGINE REAL-TIME WORKFLOW
+        // ==========================================
+        const chatWindow = document.getElementById("chat-window");
+        const chatMessagesBox = document.getElementById("chat-messages-box");
+        const chatInput = document.getElementById("chat-input");
+
+        document.getElementById("chat-toggle-btn").addEventListener("click", () => chatWindow.classList.toggle("d-none"));
+        document.getElementById("chat-close-btn").addEventListener("click", () => chatWindow.classList.add("d-none"));
+
+        async function initChat() {
+            let { data: history } = await supabase
+                .from("messages")
+                .select("*")
+                .order("created_at", { ascending: true })
+                .limit(50);
+
+            if (history) {
+                chatMessagesBox.innerHTML = history.map(msg => renderMessageHtml(msg)).join("");
+                scrollToBottom();
+            }
+
+            supabase
+                .channel('schema-payments-changes')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+                    chatMessagesBox.innerHTML += renderMessageHtml(payload.new);
+                    scrollToBottom();
+                })
+                .subscribe();
+        }
+
+        function renderMessageHtml(msg) {
+            const isMe = msg.sender_email === activeUser.email;
+            const alignClass = isMe ? "text-end" : "text-start";
+            const bgClass = isMe ? "bg-primary text-white" : "bg-white text-dark border";
+            return `
+                <div class="${alignClass} mb-2">
+                    <small class="text-muted d-block" style="font-size: 10px;">${msg.sender_email}</small>
+                    <div class="d-inline-block p-2 rounded-3 small max-w-75 shadow-sm ${bgClass}" style="word-break: break-word;">
+                        ${escapeChatHtml(msg.message_text)}
+                    </div>
+                </div>`;
+        }
+
+        document.getElementById("chat-send-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const text = chatInput.value.trim();
+            if (!text) return;
+            chatInput.value = "";
+            await supabase.from("messages").insert({ sender_email: activeUser.email, message_text: text });
+        });
+
+        function scrollToBottom() { chatMessagesBox.scrollTop = chatMessagesBox.scrollHeight; }
+        function escapeChatHtml(str) { return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+        window.onload = () => {
+            verifySecureSession();
+            document.getElementById("logout-btn").addEventListener("click", async () => {
+                await supabase.auth.signOut();
+                window.location.href = "index.html";
+            });
+        };
+    </script>
+</body>
+</html>

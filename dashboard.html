@@ -1,0 +1,379 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mountain Dash - Community Board</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+
+        .dashboard-container {
+            display: none;
+        }
+
+        .job-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+        }
+
+            .job-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.08) !important;
+            }
+    </style>
+</head>
+<body>
+
+ 
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="dashboard.html">
+                <img src="logo.png" alt="Mountain Dash Logo" class="rounded-3 me-2 shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">
+                <div>
+                    <span class="text-white mb-0 d-block lh-1" style="font-size: 1.25rem; letter-spacing: 0.5px;">Mountain</span>
+                    <span class="text-primary fw-semibold tracking-wider p-0 m-0" style="font-size: 0.8rem; text-transform: uppercase;">Dash</span>
+                </div>
+            </a>
+
+            <div class="d-flex gap-2">
+                <a href="payments.html" class="btn btn-outline-light btn-sm"><i class="bi bi-wallet2"></i> Payments</a>
+                <a href="profile.html" class="btn btn-outline-light btn-sm"><i class="bi bi-person-fill"></i> My Profile</a>
+                <button id="logout-btn" class="btn btn-danger btn-sm"><i class="bi bi-box-arrow-right"></i> Log Out</button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="dashboard-view" class="container my-5 dashboard-container">
+
+        <div class="row mb-5 align-items-center bg-white p-4 rounded-3 shadow-sm g-3">
+            <div class="col-md-8 text-center text-md-start">
+                <h2 class="fw-bold mb-1">Mountain Marketplace</h2>
+                <p class="text-primary mb-0 fw-semibold" style="font-size: 1.1rem; letter-spacing: 0.2px;">
+                    Transforming mountain communities through local jobs, local growth, and local strength.
+                </p>
+            </div>
+            <div class="col-md-4 text-center text-md-end">
+                <button class="btn btn-primary btn-lg fw-bold px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#postJobModal">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Post a Request
+                </button>
+            </div>
+        </div>
+
+        <h4 class="fw-bold mb-4 text-secondary"><i class="bi bi-cloud-sun-fill me-2 text-warning"></i>Available Mountain Gigs</h4>
+        <div class="row g-4" id="marketplace-container">
+            <div class="text-center text-muted py-5 col-12">
+                <div class="spinner-border text-primary mb-2" role="status"></div>
+                <div class="small">Scanning the mountain for open requests...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="postJobModal" tabindex="-1" aria-labelledby="postJobModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold" id="postJobModalLabel">Post a Community Request</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="post-job-form">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Task Title *</label>
+                            <input type="text" id="job-title" class="form-control" placeholder="e.g. Split Firewood, Snow Shoveling" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Description / Tools Needed *</label>
+                            <textarea id="job-desc" class="form-control" rows="4" placeholder="Be descriptive! Note any physical demands or special tools required..." required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Guaranteed Payout ($ USD) *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" id="job-payout" class="form-control" min="1" step="0.01" placeholder="0.00" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary fw-semibold btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary fw-bold btn-sm px-4" id="submit-job-btn">Publish to Board</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="global-chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 1050;">
+        <button class="btn btn-primary rounded-circle shadow-lg p-3" id="chat-toggle-btn" style="width: 60px; height: 60px;">
+            <i class="bi bi-chat-dots-fill fs-4"></i>
+        </button>
+
+        <div class="card shadow-lg border-0 d-none" id="chat-window" style="width: 350px; height: 450px; position: absolute; bottom: 75px; right: 0;">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <span class="fw-bold"><i class="bi bi-chat-text me-2"></i>Mountain Chat</span>
+                <button type="button" class="btn-close btn-close-white btn-sm" id="chat-close-btn"></button>
+            </div>
+            <div class="card-body overflow-y-auto bg-light" id="chat-messages-box" style="height: 320px;">
+            </div>
+            <div class="card-footer bg-white border-top">
+                <form id="chat-send-form" class="d-flex gap-2">
+                    <input type="text" id="chat-input" class="form-control form-control-sm" placeholder="Type a message..." required autocomplete="off">
+                    <button type="submit" class="btn btn-primary btn-sm px-3"><i class="bi bi-send-fill"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const SUPABASE_URL = "https://hxrhnemlxptlcvpvmpwu.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_U24SEjua7BNgn5cJID6QLQ_ZuR1Q1Vt";
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let activeUser = null;
+
+        // A. Load and Filter Active Marketplace Listings
+        async function fetchMarketplaceGigs() {
+            const container = document.getElementById("marketplace-container");
+
+            // Query filtering out COMPLETED jobs entirely
+            let { data: jobs, error } = await supabase
+                .from("jobs")
+                .select("*")
+                .neq("status", "completed")
+                .order("created_at", { ascending: false });
+
+            if (error) {
+                container.innerHTML = `<div class="text-danger text-center col-12 small">Error pulling board items: ${error.message}</div>`;
+                return;
+            }
+
+            if (!jobs || jobs.length === 0) {
+                container.innerHTML = `
+                        <div class="text-center text-muted py-5 col-12 bg-white rounded shadow-sm border border-dashed">
+                            <i class="bi bi-inboxes display-4 text-secondary mb-2 d-block"></i>
+                            <p class="mb-0 fw-semibold">The board is perfectly clear!</p>
+                            <span class="small text-muted">All tasks are currently claimed or completed.</span>
+                        </div>`;
+                return;
+            }
+
+            container.innerHTML = jobs.map(job => {
+                let badgeStatus = `<span class="badge bg-info text-dark">Open Marketplace</span>`;
+                let primaryActionBtn = `<button class="btn btn-success btn-sm w-100 fw-bold action-claim-btn" data-job-id="${job.id}">Claim This Gig</button>`;
+
+                if (job.status === "pending") {
+                    badgeStatus = `<span class="badge bg-warning text-dark">Claimed • In Progress</span>`;
+
+                    if (job.accepted_by === activeUser.email) {
+                        primaryActionBtn = `<button class="btn btn-outline-secondary btn-sm w-100 fw-bold" disabled><i class="bi bi-clock-history me-1"></i>You are assigned</button>`;
+                    } else {
+                        const backupList = job.backup_offers || [];
+                        if (backupList.includes(activeUser.email)) {
+                            primaryActionBtn = `<button class="btn btn-secondary btn-sm w-100 fw-bold" disabled><i class="bi bi-check2-all me-1"></i>In Backup Queue</button>`;
+                        } else {
+                            primaryActionBtn = `<button class="btn btn-dark btn-sm w-100 fw-bold action-backup-btn" data-job-id="${job.id}">Join Backup Line</button>`;
+                        }
+                    }
+                }
+
+                if (job.posted_by === activeUser.email) {
+                    primaryActionBtn = `<a href="profile.html" class="btn btn-outline-primary btn-sm w-100 fw-bold"><i class="bi bi-gear-fill me-1"></i>Manage My Post</a>`;
+                }
+
+                return `
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 shadow-sm job-card rounded-3 bg-white border-top border-4 border-primary">
+                                <div class="card-body d-flex flex-column p-4">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="card-title fw-bold text-dark mb-0">${escapeHtml(job.title)}</h5>
+                                        <span class="fs-5 fw-bold text-success">$${Number(job.payout).toFixed(2)}</span>
+                                    </div>
+                                    <div class="mb-3">${badgeStatus}</div>
+                                    <p class="card-text text-muted small flex-grow-1 mb-4" style="white-space: pre-line;">${escapeHtml(job.description)}</p>
+                                    <hr class="text-muted my-2">
+                                    <div class="small text-muted mb-3"><i class="bi bi-person-circle me-1"></i> Posted by: <span class="fw-semibold">${escapeHtml(job.posted_by)}</span></div>
+                                    <div class="mt-auto">${primaryActionBtn}</div>
+                                </div>
+                            </div>
+                        </div>`;
+            }).join("");
+
+            attachCardEventListeners();
+        }
+
+        // B. Event Listeners for Claim & Backup Operations
+        function attachCardEventListeners() {
+            document.querySelectorAll(".action-claim-btn").forEach(btn => {
+                btn.addEventListener("click", async (e) => {
+                    const jobId = e.target.getAttribute("data-job-id");
+                    e.target.disabled = true;
+
+                    const { error } = await supabase
+                        .from("jobs")
+                        .update({ status: "pending", accepted_by: activeUser.email })
+                        .eq("id", jobId);
+
+                    if (error) alert("Could not claim job: " + error.message);
+                    fetchMarketplaceGigs();
+                });
+            });
+
+            document.querySelectorAll(".action-backup-btn").forEach(btn => {
+                btn.addEventListener("click", async (e) => {
+                    const jobId = e.target.getAttribute("data-job-id");
+                    e.target.disabled = true;
+
+                    let { data: targetJob } = await supabase.from("jobs").select("backup_offers").eq("id", jobId).single();
+                    let updatedQueue = targetJob?.backup_offers || [];
+
+                    if (!updatedQueue.includes(activeUser.email)) {
+                        updatedQueue.push(activeUser.email);
+                    }
+
+                    const { error } = await supabase
+                        .from("jobs")
+                        .update({ backup_offers: updatedQueue })
+                        .eq("id", jobId);
+
+                    if (error) alert("Could not register backup: " + error.message);
+                    fetchMarketplaceGigs();
+                });
+            });
+        }
+
+        // C. Form Submission Listener for Posting New Gigs
+        document.getElementById("post-job-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById("submit-job-btn");
+
+            const title = document.getElementById("job-title").value.trim();
+            const desc = document.getElementById("job-desc").value.trim();
+            const payout = document.getElementById("job-payout").value;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Publishing...";
+
+            const { error } = await supabase
+                .from("jobs")
+                .insert({
+                    title: title,
+                    description: desc,
+                    payout: parseFloat(payout),
+                    posted_by: activeUser.email,
+                    status: "open",
+                    backup_offers: []
+                });
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Publish to Board";
+
+            if (error) {
+                alert("Error writing post: " + error.message);
+            } else {
+                document.getElementById("post-job-form").reset();
+                const modalEl = document.getElementById('postJobModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                modalInstance.hide();
+                fetchMarketplaceGigs();
+            }
+        });
+
+        // XSS Escape Utility Helper
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // D. Core Session Protection Guard Loop
+        async function checkAccess() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = "index.html";
+            } else {
+                activeUser = session.user;
+                document.getElementById("dashboard-view").style.display = "block";
+                fetchMarketplaceGigs();
+                initChat(); // Fires up global chat engine once authed
+            }
+        }
+
+        // ==========================================
+        // GLOBAL CHAT ENGINE REAL-TIME WORKFLOW
+        // ==========================================
+        const chatWindow = document.getElementById("chat-window");
+        const chatMessagesBox = document.getElementById("chat-messages-box");
+        const chatInput = document.getElementById("chat-input");
+
+        document.getElementById("chat-toggle-btn").addEventListener("click", () => chatWindow.classList.toggle("d-none"));
+        document.getElementById("chat-close-btn").addEventListener("click", () => chatWindow.classList.add("d-none"));
+
+        async function initChat() {
+            let { data: history } = await supabase
+                .from("messages")
+                .select("*")
+                .order("created_at", { ascending: true })
+                .limit(50);
+
+            if (history) {
+                chatMessagesBox.innerHTML = history.map(msg => renderMessageHtml(msg)).join("");
+                scrollToBottom();
+            }
+
+            supabase
+                .channel('schema-db-changes')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+                    chatMessagesBox.innerHTML += renderMessageHtml(payload.new);
+                    scrollToBottom();
+                })
+                .subscribe();
+        }
+
+        function renderMessageHtml(msg) {
+            const isMe = msg.sender_email === activeUser.email;
+            const alignClass = isMe ? "text-end" : "text-start";
+            const bgClass = isMe ? "bg-primary text-white" : "bg-white text-dark border";
+
+            return `
+                    <div class="${alignClass} mb-2">
+                        <small class="text-muted d-block" style="font-size: 10px;">${msg.sender_email}</small>
+                        <div class="d-inline-block p-2 rounded-3 small max-w-75 shadow-sm ${bgClass}" style="word-break: break-word;">
+                            ${escapeChatHtml(msg.message_text)}
+                        </div>
+                    </div>`;
+        }
+
+        document.getElementById("chat-send-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const text = chatInput.value.trim();
+            if (!text) return;
+            chatInput.value = "";
+
+            await supabase.from("messages").insert({
+                sender_email: activeUser.email,
+                message_text: text
+            });
+        });
+
+        function scrollToBottom() { chatMessagesBox.scrollTop = chatMessagesBox.scrollHeight; }
+        function escapeChatHtml(str) { return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+        window.onload = () => {
+            checkAccess();
+            document.getElementById("logout-btn").addEventListener("click", async () => {
+                await supabase.auth.signOut();
+                window.location.href = "index.html";
+            });
+        };
+    </script>
+</body>
+</html>
