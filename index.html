@@ -123,9 +123,10 @@
         // C. Handle Google OAuth redirect configuration to send users back to dashboard.html
         async function startGoogleLogin() {
             authStatus.textContent = "Redirecting to Google...";
+            const redirectUrl = `${window.location.origin}/dashboard.html`;
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: "google",
-                options: { redirectTo: "https://localhost:7145/dashboard.html" }
+                options: { redirectTo: redirectUrl }
             });
             if (error) {
                 authStatus.textContent = "Google error: " + error.message;
