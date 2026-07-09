@@ -61,6 +61,7 @@
             </a>
 
             <div class="d-flex gap-2">
+                <a href="index.html" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-in-right"></i> Sign In</a>
                 <a href="payments.html" class="btn btn-outline-light btn-sm"><i class="bi bi-wallet2"></i> Payments</a>
                 <a href="profile.html" class="btn btn-outline-light btn-sm"><i class="bi bi-person-fill"></i> My Profile</a>
                 <a href="mailto:techsupport@morninglightsoutions" class="btn btn-outline-warning btn-sm"><i class="bi bi-envelope-fill"></i> Report Issue</a>
@@ -77,6 +78,9 @@
                 <p class="text-primary mb-0 fw-semibold" style="font-size: 1.1rem; letter-spacing: 0.2px;">
                     Transforming mountain communities through local jobs, local growth, and local strength.
                 </p>
+                <div class="alert alert-info small mb-0 mt-3" role="alert">
+                    <strong>How it works:</strong> Browse open requests as a guest. Sign in to claim a gig or post your own request.
+                </div>
             </div>
             <div class="col-md-4 text-center text-md-end">
                 <button class="btn btn-primary btn-lg fw-bold px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#postJobModal">
@@ -189,7 +193,9 @@
 
             container.innerHTML = jobs.map(job => {
                 let badgeStatus = `<span class="badge bg-info text-dark">Open Marketplace</span>`;
-                let primaryActionBtn = `<button class="btn btn-success btn-sm w-100 fw-bold action-claim-btn" data-job-id="${job.id}">Claim This Gig</button>`;
+                let primaryActionBtn = currentUserEmail
+                    ? `<button type="button" class="btn btn-success btn-sm w-100 fw-bold action-claim-btn" data-job-id="${job.id}">Claim This Gig</button>`
+                    : `<a href="index.html" class="btn btn-outline-primary btn-sm w-100 fw-bold"><i class="bi bi-box-arrow-in-right me-1"></i>Sign in to claim</a>`;
 
                 if (job.status === "pending") {
                     badgeStatus = `<span class="badge bg-warning text-dark">Claimed • In Progress</span>`;
@@ -237,8 +243,15 @@
         function attachCardEventListeners() {
             document.querySelectorAll(".action-claim-btn").forEach(btn => {
                 btn.addEventListener("click", async (e) => {
-                    const jobId = e.target.getAttribute("data-job-id");
-                    e.target.disabled = true;
+                    e.preventDefault();
+
+                    if (!activeUser) {
+                        window.location.href = "index.html";
+                        return;
+                    }
+
+                    const jobId = e.currentTarget.getAttribute("data-job-id");
+                    e.currentTarget.disabled = true;
 
                     const { error } = await supabase
                         .from("jobs")
