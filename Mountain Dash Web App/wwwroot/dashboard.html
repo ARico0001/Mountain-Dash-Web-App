@@ -158,6 +158,7 @@
         // A. Load and Filter Active Marketplace Listings
         async function fetchMarketplaceGigs() {
             const container = document.getElementById("marketplace-container");
+            const currentUserEmail = activeUser?.email || null;
 
             // Query filtering out COMPLETED jobs entirely
             let { data: jobs, error } = await supabase
@@ -188,19 +189,21 @@
                 if (job.status === "pending") {
                     badgeStatus = `<span class="badge bg-warning text-dark">Claimed • In Progress</span>`;
 
-                    if (job.accepted_by === activeUser.email) {
+                    if (currentUserEmail && job.accepted_by === currentUserEmail) {
                         primaryActionBtn = `<button class="btn btn-outline-secondary btn-sm w-100 fw-bold" disabled><i class="bi bi-clock-history me-1"></i>You are assigned</button>`;
-                    } else {
+                    } else if (currentUserEmail) {
                         const backupList = job.backup_offers || [];
-                        if (backupList.includes(activeUser.email)) {
+                        if (backupList.includes(currentUserEmail)) {
                             primaryActionBtn = `<button class="btn btn-secondary btn-sm w-100 fw-bold" disabled><i class="bi bi-check2-all me-1"></i>In Backup Queue</button>`;
                         } else {
                             primaryActionBtn = `<button class="btn btn-dark btn-sm w-100 fw-bold action-backup-btn" data-job-id="${job.id}">Join Backup Line</button>`;
                         }
+                    } else {
+                        primaryActionBtn = `<a href="index.html" class="btn btn-outline-primary btn-sm w-100 fw-bold"><i class="bi bi-box-arrow-in-right me-1"></i>Sign in to claim</a>`;
                     }
                 }
 
-                if (job.posted_by === activeUser.email) {
+                if (currentUserEmail && job.posted_by === currentUserEmail) {
                     primaryActionBtn = `<a href="profile.html" class="btn btn-outline-primary btn-sm w-100 fw-bold"><i class="bi bi-gear-fill me-1"></i>Manage My Post</a>`;
                 }
 
@@ -315,9 +318,13 @@
                 // User is a guest
                 activeUser = null;
                 // Hide authenticated-only layout details if necessary (e.g., hiding Profile/Log Out buttons)
-                document.getElementById("logout-btn").style.display = "none";
-                document.querySelector('a[href="profile.html"]').style.display = "none";
-                document.querySelector('a[href="payments.html"]').style.display = "none";
+                const logoutBtn = document.getElementById("logout-btn");
+                const profileLink = document.querySelector('a[href="profile.html"]');
+                const paymentsLink = document.querySelector('a[href="payments.html"]');
+
+                if (logoutBtn) logoutBtn.style.display = "none";
+                if (profileLink) profileLink.style.display = "none";
+                if (paymentsLink) paymentsLink.style.display = "none";
             } else {
                 activeUser = session.user;
                 initChat(); // Fires up global chat engine once authed

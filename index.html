@@ -150,11 +150,9 @@
             const loggedOutView = document.getElementById("logged-out-view");
 
             if (session) {
-                // Already signed in? Send straight down to the dashboard
                 window.location.href = "dashboard.html";
             } else {
-                // Not logged in? Show the interface cleanly
-                loggedOutView.style.display = "block";
+                window.location.href = "dashboard.html";
             }
         }
 
