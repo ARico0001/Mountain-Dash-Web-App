@@ -308,17 +308,24 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // D. Core Session Protection Guard Loop
+        // D. Core Session Protection Guard Loop (Updated for Public Browsing)
         async function checkAccess() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
-                window.location.href = "index.html";
+                // User is a guest
+                activeUser = null;
+                // Hide authenticated-only layout details if necessary (e.g., hiding Profile/Log Out buttons)
+                document.getElementById("logout-btn").style.display = "none";
+                document.querySelector('a[href="profile.html"]').style.display = "none";
+                document.querySelector('a[href="payments.html"]').style.display = "none";
             } else {
                 activeUser = session.user;
-                document.getElementById("dashboard-view").style.display = "block";
-                fetchMarketplaceGigs();
                 initChat(); // Fires up global chat engine once authed
             }
+
+            // Always show the dashboard and fetch gigs for both guests and members
+            document.getElementById("dashboard-view").style.display = "block";
+            fetchMarketplaceGigs();
         }
 
         // ==========================================
