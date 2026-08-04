@@ -27,8 +27,6 @@
 </head>
 <body>
 
- 
-
     <div id="logged-out-view" class="container my-5 auth-dependent">
         <div class="row justify-content-center">
             <div class="col-md-5">
@@ -127,19 +125,19 @@
             }
         }
 
-        // C. Handle Google OAuth redirect configuration to send users back to dashboard.html
+        // C. Handle Google OAuth redirect configuration dynamically
         async function startGoogleLogin() {
             authStatus.textContent = "Redirecting to Google...";
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: "google",
-                options: { redirectTo: "https://localhost:7145/dashboard.html" }
+                options: { redirectTo: `${window.location.origin}/dashboard.html` }
             });
             if (error) {
                 authStatus.textContent = "Google error: " + error.message;
             }
         }
 
-        // D. Initial Session Controller
+        // D. Initial Session Controller (Fixed)
         async function runSessionCheck() {
             const { data: { session } } = await supabase.auth.getSession();
             const loggedOutView = document.getElementById("logged-out-view");
@@ -147,7 +145,8 @@
             if (session) {
                 window.location.href = "dashboard.html";
             } else {
-                window.location.href = "dashboard.html";
+                // Revealed the login form correctly instead of trapping user in loop
+                loggedOutView.classList.remove("auth-dependent");
             }
         }
 
