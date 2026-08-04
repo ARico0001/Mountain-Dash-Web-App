@@ -14,10 +14,6 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="icon" href="/logo.png" type="image/png">
-    <link rel="apple-touch-icon" href="/logo.png">
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#0d6efd">
 
     <style>
         body {
@@ -64,7 +60,6 @@
                 <a href="index.html" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-in-right"></i> Sign In</a>
                 <a href="payments.html" class="btn btn-outline-light btn-sm"><i class="bi bi-wallet2"></i> Payments</a>
                 <a href="profile.html" class="btn btn-outline-light btn-sm"><i class="bi bi-person-fill"></i> My Profile</a>
-                <a href="mailto:techsupport@morninglightsoutions" class="btn btn-outline-warning btn-sm"><i class="bi bi-envelope-fill"></i> Report Issue</a>
                 <button id="logout-btn" class="btn btn-danger btn-sm"><i class="bi bi-box-arrow-right"></i> Log Out</button>
             </div>
         </div>
@@ -98,6 +93,7 @@
         </div>
     </div>
 
+    <!-- Post Job Modal with Region & Full Categories -->
     <div class="modal fade" id="postJobModal" tabindex="-1" aria-labelledby="postJobModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
@@ -111,6 +107,37 @@
                             <label class="form-label fw-semibold small">Task Title *</label>
                             <input type="text" id="job-title" class="form-control" placeholder="e.g. Split Firewood, Snow Shoveling" required>
                         </div>
+                        
+                        <!-- Region Selector -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Region *</label>
+                            <select id="job-region" class="form-select" required>
+                                <option value="" selected disabled>Select local region...</option>
+                                <option value="San Bernardino">San Bernardino</option>
+                                <option value="Mountains">Mountains</option>
+                            </select>
+                        </div>
+
+                        <!-- Category Selector -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Category *</label>
+                            <select id="job-category" class="form-select" required>
+                                <option value="" selected disabled>Choose a category...</option>
+                                <option value="Automotive">Automotive</option>
+                                <option value="Labor">Labor</option>
+                                <option value="IT Services">IT Services</option>
+                                <option value="Real Estate">Real Estate</option>
+                                <option value="Events">Events</option>
+                                <option value="Skilled Trade">Skilled Trade</option>
+                                <option value="Financial">Financial</option>
+                                <option value="Health and Wellness">Health and Wellness</option>
+                                <option value="Household">Household</option>
+                                <option value="Biz Ad">Biz Ad</option>
+                                <option value="Transport">Transport</option>
+                                <option value="Misc">Misc</option>
+                            </select>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label fw-semibold small">Description / Tools Needed *</label>
                             <textarea id="job-desc" class="form-control" rows="4" placeholder="Be descriptive! Note any physical demands or special tools required..." required></textarea>
@@ -169,7 +196,6 @@
             const container = document.getElementById("marketplace-container");
             const currentUserEmail = activeUser?.email || null;
 
-            // Query filtering out COMPLETED jobs entirely
             let { data: jobs, error } = await supabase
                 .from("jobs")
                 .select("*")
@@ -193,6 +219,8 @@
 
             container.innerHTML = jobs.map(job => {
                 let badgeStatus = `<span class="badge bg-info text-dark">Open Marketplace</span>`;
+                let regionBadge = job.region ? `<span class="badge bg-dark text-light mb-2 me-1"><i class="bi bi-geo-alt-fill me-1"></i>${escapeHtml(job.region)}</span>` : '';
+                let categoryBadge = job.category ? `<span class="badge bg-secondary text-light mb-2">${escapeHtml(job.category)}</span>` : '';
                 let primaryActionBtn = currentUserEmail
                     ? `<button type="button" class="btn btn-success btn-sm w-100 fw-bold action-claim-btn" data-job-id="${job.id}">Claim This Gig</button>`
                     : `<a href="index.html" class="btn btn-outline-primary btn-sm w-100 fw-bold"><i class="bi bi-box-arrow-in-right me-1"></i>Sign in to claim</a>`;
@@ -225,6 +253,10 @@
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <h5 class="card-title fw-bold text-dark mb-0">${escapeHtml(job.title)}</h5>
                                         <span class="fs-5 fw-bold text-success">$${Number(job.payout).toFixed(2)}</span>
+                                    </div>
+                                    <div>
+                                        ${regionBadge}
+                                        ${categoryBadge}
                                     </div>
                                     <div class="mb-3">${badgeStatus}</div>
                                     <p class="card-text text-muted small flex-grow-1 mb-4" style="white-space: pre-line;">${escapeHtml(job.description)}</p>
@@ -286,12 +318,14 @@
             });
         }
 
-        // C. Form Submission Listener for Posting New Gigs
+        // C. Form Submission Listener for Posting New Gigs (Includes Region & Category)
         document.getElementById("post-job-form").addEventListener("submit", async (e) => {
             e.preventDefault();
             const submitBtn = document.getElementById("submit-job-btn");
 
             const title = document.getElementById("job-title").value.trim();
+            const region = document.getElementById("job-region").value;
+            const category = document.getElementById("job-category").value;
             const desc = document.getElementById("job-desc").value.trim();
             const payout = document.getElementById("job-payout").value;
 
@@ -302,6 +336,8 @@
                 .from("jobs")
                 .insert({
                     title: title,
+                    region: region,
+                    category: category,
                     description: desc,
                     payout: parseFloat(payout),
                     posted_by: activeUser.email,
@@ -329,7 +365,7 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // D. Core Session Protection Guard Loop (Updated for Public Browsing)
+        // D. Core Session Protection Guard Loop
         async function checkAccess() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
@@ -343,7 +379,7 @@
                 if (paymentsLink) paymentsLink.style.display = "none";
             } else {
                 activeUser = session.user;
-                initChat(); // Fires up global chat engine once authed
+                initChat();
             }
 
             document.getElementById("dashboard-view").style.display = "block";
@@ -417,12 +453,6 @@
                 window.location.href = "index.html";
             });
         };
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(err => console.warn('SW registration failed:', err));
-            });
-        }
     </script>
     <footer class="container my-5 text-center">
         <hr class="mb-4">
