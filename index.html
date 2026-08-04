@@ -146,14 +146,7 @@
 
         // D. Initial Session Controller
         async function runSessionCheck() {
-            const { data: { session } } = await supabase.auth.getSession();
-            const loggedOutView = document.getElementById("logged-out-view");
-
-            if (session) {
-                window.location.href = "dashboard.html";
-            } else {
-                window.location.href = "dashboard.html";
-            }
+            window.location.href = "dashboard.html";
         }
 
         window.onload = () => {
