@@ -14,10 +14,6 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="icon" href="/logo.png" type="image/png">
-    <link rel="apple-touch-icon" href="/logo.png">
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#0d6efd">
 
     <style>
         body {
@@ -134,10 +130,9 @@
         // C. Handle Google OAuth redirect configuration to send users back to dashboard.html
         async function startGoogleLogin() {
             authStatus.textContent = "Redirecting to Google...";
-            const redirectUrl = `${window.location.origin}/dashboard.html`;
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: "google",
-                options: { redirectTo: redirectUrl }
+                options: { redirectTo: "https://localhost:7145/dashboard.html" }
             });
             if (error) {
                 authStatus.textContent = "Google error: " + error.message;
@@ -146,7 +141,14 @@
 
         // D. Initial Session Controller
         async function runSessionCheck() {
-            window.location.href = "dashboard.html";
+            const { data: { session } } = await supabase.auth.getSession();
+            const loggedOutView = document.getElementById("logged-out-view");
+
+            if (session) {
+                window.location.href = "dashboard.html";
+            } else {
+                window.location.href = "dashboard.html";
+            }
         }
 
         window.onload = () => {
@@ -156,12 +158,6 @@
             document.getElementById("signup-email-btn").addEventListener("click", handleEmailSignUp);
             document.getElementById("login-btn").addEventListener("click", startGoogleLogin);
         };
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(err => console.warn('SW registration failed:', err));
-            });
-        }
     </script>
 </body>
 </html>

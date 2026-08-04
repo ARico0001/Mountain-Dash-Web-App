@@ -494,12 +494,6 @@
         function escapeChatHtml(str) { return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
         window.onload = () => {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(registrations => {
-                    registrations.forEach(reg => reg.update());
-                }).catch(() => {});
-            }
-
             checkAccess();
             document.getElementById("logout-btn").addEventListener("click", async () => {
                 await supabase.auth.signOut();
