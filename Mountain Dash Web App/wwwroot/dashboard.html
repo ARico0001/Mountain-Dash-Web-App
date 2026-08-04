@@ -492,11 +492,23 @@
         function scrollToBottom() { chatMessagesBox.scrollTop = chatMessagesBox.scrollHeight; }
         function escapeChatHtml(str) { return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
-        window.onload = () => {
+        window.onload = async () => {
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(registrations => {
-                    registrations.forEach(reg => reg.update());
-                }).catch(() => {});
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    if (registrations.length > 0 && !localStorage.getItem('sw-refreshed')) {
+                        for (const reg of registrations) {
+                            await reg.unregister();
+                        }
+                        localStorage.setItem('sw-refreshed', 'true');
+                        window.location.reload();
+                        return;
+                    }
+
+                    await navigator.serviceWorker.register('/sw.js');
+                } catch (err) {
+                    console.warn('Service Worker cleanup error:', err);
+                }
             }
 
             checkAccess();
