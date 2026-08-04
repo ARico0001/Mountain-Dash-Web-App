@@ -78,7 +78,7 @@
                 </div>
             </div>
             <div class="col-md-4 text-center text-md-end">
-                <button class="btn btn-primary btn-lg fw-bold px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#postJobModal">
+                <button id="post-job-btn" class="btn btn-primary btn-lg fw-bold px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#postJobModal">
                     <i class="bi bi-plus-circle-fill me-2"></i>Post a Request
                 </button>
             </div>
@@ -135,6 +135,8 @@
                                 <option value="Biz Ad">Biz Ad</option>
                                 <option value="Transport">Transport</option>
                                 <option value="Misc">Misc</option>
+                                <option value="Delivery">Delivery</option>
+                                <option value="Misc">General</option>
                             </select>
                         </div>
 
@@ -190,6 +192,33 @@
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let activeUser = null;
+        const postJobBtn = document.getElementById("post-job-btn");
+        const chatToggleBtn = document.getElementById("chat-toggle-btn");
+
+        function refreshAuthControls() {
+            if (!activeUser) {
+                if (postJobBtn) {
+                    postJobBtn.disabled = true;
+                    postJobBtn.title = "Sign in to post a request";
+                    postJobBtn.classList.add("disabled");
+                }
+                if (chatToggleBtn) {
+                    chatToggleBtn.disabled = true;
+                    chatToggleBtn.style.display = "none";
+                }
+                return;
+            }
+
+            if (postJobBtn) {
+                postJobBtn.disabled = false;
+                postJobBtn.title = "";
+                postJobBtn.classList.remove("disabled");
+            }
+            if (chatToggleBtn) {
+                chatToggleBtn.disabled = false;
+                chatToggleBtn.style.display = "inline-block";
+            }
+        }
 
         // A. Load and Filter Active Marketplace Listings
         async function fetchMarketplaceGigs() {
@@ -323,6 +352,13 @@
             e.preventDefault();
             const submitBtn = document.getElementById("submit-job-btn");
 
+            if (!activeUser) {
+                alert("Please sign in before posting a request.");
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Publish to Board";
+                return;
+            }
+
             const title = document.getElementById("job-title").value.trim();
             const region = document.getElementById("job-region").value;
             const category = document.getElementById("job-category").value;
@@ -382,6 +418,7 @@
                 initChat();
             }
 
+            refreshAuthControls();
             document.getElementById("dashboard-view").style.display = "block";
             fetchMarketplaceGigs();
         }
@@ -435,6 +472,11 @@
             e.preventDefault();
             const text = chatInput.value.trim();
             if (!text) return;
+            if (!activeUser) {
+                alert("Please sign in to join the chat.");
+                chatInput.value = "";
+                return;
+            }
             chatInput.value = "";
 
             await supabase.from("messages").insert({
