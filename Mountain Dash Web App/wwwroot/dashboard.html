@@ -496,22 +496,23 @@
             if ('serviceWorker' in navigator) {
                 try {
                     const registrations = await navigator.serviceWorker.getRegistrations();
-                    if (registrations.length > 0 && !localStorage.getItem('sw-refreshed')) {
-                        for (const reg of registrations) {
-                            await reg.unregister();
-                        }
-                        localStorage.setItem('sw-refreshed', 'true');
+                    if (registrations.length > 0) {
+                        await Promise.all(registrations.map(reg => reg.unregister().catch(() => {})));
                         window.location.reload();
                         return;
                     }
-
-                    await navigator.serviceWorker.register('/sw.js');
                 } catch (err) {
                     console.warn('Service Worker cleanup error:', err);
                 }
             }
 
-            checkAccess();
+            try {
+                await checkAccess();
+            } catch (err) {
+                console.warn('Check access failed:', err);
+                document.getElementById("dashboard-view").style.display = "block";
+            }
+
             document.getElementById("logout-btn").addEventListener("click", async () => {
                 await supabase.auth.signOut();
                 window.location.href = "index.html";
