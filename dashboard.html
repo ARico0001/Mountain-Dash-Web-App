@@ -414,19 +414,12 @@
         async function checkAccess() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
-                activeUser = null;
-                const logoutBtn = document.getElementById("logout-btn");
-                const profileLink = document.querySelector('a[href="profile.html"]');
-                const paymentsLink = document.querySelector('a[href="payments.html"]');
-
-                if (logoutBtn) logoutBtn.style.display = "none";
-                if (profileLink) profileLink.style.display = "none";
-                if (paymentsLink) paymentsLink.style.display = "none";
-            } else {
-                activeUser = session.user;
-                initChat();
+                window.location.replace("index.html");
+                return;
             }
 
+            activeUser = session.user;
+            initChat();
             refreshAuthControls();
             fetchMarketplaceGigs();
         }

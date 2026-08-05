@@ -72,7 +72,13 @@
         const SUPABASE_URL = "https://hxrhnemlxptlcvpvmpwu.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_U24SEjua7BNgn5cJID6QLQ_ZuR1Q1Vt";
 
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true
+            }
+        });
         const authStatus = document.getElementById("auth-status");
 
         // A. Handle Email Sign-In
@@ -145,9 +151,9 @@
             const loggedOutView = document.getElementById("logged-out-view");
 
             if (session) {
-                window.location.href = "dashboard.html";
+                window.location.replace("dashboard.html");
             } else {
-                window.location.href = "dashboard.html";
+                loggedOutView.classList.remove("auth-dependent");
             }
         }
 
