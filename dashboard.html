@@ -411,15 +411,13 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        async function checkAccess() {
+        async function initApp() {
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                window.location.replace("index.html");
-                return;
-            }
 
-            activeUser = session.user;
-            initChat();
+            activeUser = session?.user || null;
+            if (activeUser) {
+                initChat();
+            }
             refreshAuthControls();
             fetchMarketplaceGigs();
         }
@@ -487,7 +485,7 @@
         function escapeChatHtml(str) { return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
         window.onload = () => {
-            checkAccess();
+            initApp();
             document.getElementById("logout-btn").addEventListener("click", async () => {
                 await supabase.auth.signOut();
                 window.location.href = "index.html";
