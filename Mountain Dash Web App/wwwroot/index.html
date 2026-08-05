@@ -19,7 +19,6 @@
         body {
             background: #f8f9fa;
         }
-        /* Hidden layout container until initial session check finishes */
         .auth-dependent {
             display: none;
         }
@@ -36,7 +35,7 @@
 
                     <h5 class="fw-semibold mb-3">Account Access</h5>
 
-                    <form id="auth-form" class="d-flex flex-column gap-2 mb-3">
+                    <form id="auth-form" class="d-flex flex-column gap-2 mb-3" onsubmit="return false;">
                         <input type="email" id="auth-email" class="form-control" placeholder="Your Email" required>
                         <input type="password" id="auth-password" class="form-control" placeholder="Your Password" required>
 
@@ -52,7 +51,7 @@
 
                     <div class="text-center my-2 text-muted small">— OR —</div>
 
-                    <button id="login-btn" class="btn btn-outline-dark fw-bold w-100 d-flex align-items-center justify-content-center gap-2">
+                    <button id="login-btn" type="button" class="btn btn-outline-dark fw-bold w-100 d-flex align-items-center justify-content-center gap-2">
                         <i class="bi bi-google text-danger"></i> Sign in with Google
                     </button>
 
@@ -73,7 +72,7 @@
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const authStatus = document.getElementById("auth-status");
 
-        // A. Handle Email Sign-In
+        // 1. Email Sign-In Logic
         async function handleEmailSignIn() {
             const email = document.getElementById("auth-email").value;
             const password = document.getElementById("auth-password").value;
@@ -99,7 +98,7 @@
             }
         }
 
-        // B. Handle Email Sign-Up
+        // 2. Email Sign-Up Logic
         async function handleEmailSignUp() {
             const email = document.getElementById("auth-email").value;
             const password = document.getElementById("auth-password").value;
@@ -125,19 +124,22 @@
             }
         }
 
-        // C. Handle Google OAuth redirect configuration dynamically
+        // 3. Google OAuth Login Logic
         async function startGoogleLogin() {
             authStatus.textContent = "Redirecting to Google...";
+            authStatus.className = "mt-3 text-center fw-semibold small text-dark";
+            
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: "google",
                 options: { redirectTo: `${window.location.origin}/dashboard.html` }
             });
             if (error) {
                 authStatus.textContent = "Google error: " + error.message;
+                authStatus.className = "mt-3 text-center fw-semibold small text-danger";
             }
         }
 
-        // D. Initial Session Controller (Fixed)
+        // 4. Session Check & Event Listener Attachments
         async function runSessionCheck() {
             const { data: { session } } = await supabase.auth.getSession();
             const loggedOutView = document.getElementById("logged-out-view");
@@ -145,18 +147,28 @@
             if (session) {
                 window.location.href = "dashboard.html";
             } else {
-                // Revealed the login form correctly instead of trapping user in loop
                 loggedOutView.classList.remove("auth-dependent");
             }
         }
 
-        window.onload = () => {
+        // Ensure buttons hook up properly when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+
+        function initApp() {
             runSessionCheck();
 
-            document.getElementById("signin-email-btn").addEventListener("click", handleEmailSignIn);
-            document.getElementById("signup-email-btn").addEventListener("click", handleEmailSignUp);
-            document.getElementById("login-btn").addEventListener("click", startGoogleLogin);
-        };
+            const signinBtn = document.getElementById("signin-email-btn");
+            const signupBtn = document.getElementById("signup-email-btn");
+            const googleBtn = document.getElementById("login-btn");
+
+            if (signinBtn) signinBtn.addEventListener("click", handleEmailSignIn);
+            if (signupBtn) signupBtn.addEventListener("click", handleEmailSignUp);
+            if (googleBtn) googleBtn.addEventListener("click", startGoogleLogin);
+        }
     </script>
 </body>
 </html>
