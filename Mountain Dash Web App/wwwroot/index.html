@@ -1,189 +1,113 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7Y1ECG9WQR"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-7Y1ECG9WQR');
-    </script>
-    <title>Mountain Dash - Access</title>
+﻿<script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    const SUPABASE_URL = "https://hxrhnemlxptlcvpvmpwu.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_U24SEjua7BNgn5cJID6QLQ_ZuR1Q1Vt";
 
-    <style>
-        body {
-            background: #f8f9fa;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
         }
-        .auth-dependent {
-            display: none;
-        }
-    </style>
-</head>
-<body>
+    });
 
-    <div id="logged-out-view" class="container my-5 auth-dependent">
-        <div class="row justify-content-center">
-            <div class="col-md-5">
-                <div class="card shadow p-4 border-0 rounded-3">
-                    <h2 class="fw-bold text-center mb-1">Mountain Dash</h2>
-                    <p class="text-muted text-center mb-4">Community Job Board & Marketplace</p>
+    const authStatus = document.getElementById("auth-status");
+    const loggedOutView = document.getElementById("logged-out-view");
 
-                    <h5 class="fw-semibold mb-3">Account Access</h5>
-
-                    <form id="auth-form" class="d-flex flex-column gap-2 mb-3" onsubmit="return false;">
-                        <input type="email" id="auth-email" class="form-control" placeholder="Your Email" required>
-                        <input type="password" id="auth-password" class="form-control" placeholder="Your Password" required>
-
-                        <div class="d-flex gap-2 mt-2">
-                            <button type="button" id="signin-email-btn" class="btn btn-primary fw-bold flex-grow-1">
-                                Sign In
-                            </button>
-                            <button type="button" id="signup-email-btn" class="btn btn-success fw-bold flex-grow-1">
-                                Sign Up
-                            </button>
-                        </div>
-                    </form>
-
-                    <div class="text-center my-2 text-muted small">— OR —</div>
-
-                    <button id="login-btn" type="button" class="btn btn-outline-dark fw-bold w-100 d-flex align-items-center justify-content-center gap-2">
-                        <i class="bi bi-google text-danger"></i> Sign in with Google
-                    </button>
-
-                    <div id="auth-status" class="mt-3 text-center fw-semibold small"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script type="module">
-        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-        const SUPABASE_URL = "https://hxrhnemlxptlcvpvmpwu.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_U24SEjua7BNgn5cJID6QLQ_ZuR1Q1Vt";
-
-        // Explicitly enable session detection from URL tokens to prevent loops
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-            auth: {
-                persistSession: true,
-                autoRefreshToken: true,
-                detectSessionInUrl: true
-            }
-        });
-
-        const authStatus = document.getElementById("auth-status");
-
-        // Listen for auth state changes to catch OAuth redirect tokens safely
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (session) {
-                window.location.replace("dashboard.html");
-            }
-        });
-
-        // 1. Email Sign-In Logic
-        async function handleEmailSignIn() {
-            const email = document.getElementById("auth-email").value;
-            const password = document.getElementById("auth-password").value;
-
-            if (!email || !password) {
-                authStatus.textContent = "Please fill out both email and password fields.";
-                authStatus.className = "mt-3 text-center fw-semibold small text-danger";
-                return;
-            }
-
-            authStatus.textContent = "Signing in...";
-            authStatus.className = "mt-3 text-center fw-semibold small text-dark";
-
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-            if (error) {
-                authStatus.textContent = "Sign-in error: " + error.message;
-                authStatus.className = "mt-3 text-center fw-semibold small text-danger";
-            } else {
-                authStatus.textContent = "Success! Loading dashboard...";
-                authStatus.className = "mt-3 text-center fw-semibold small text-success";
-                window.location.replace("dashboard.html");
-            }
+    async function initApp() {
+        // 1. Check if Supabase is processing an OAuth token hash from the redirect URL first
+        const hash = window.location.hash;
+        if (hash && hash.includes("access_token")) {
+            // Give Supabase a moment to process the hash fragments into a session
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
 
-        // 2. Email Sign-Up Logic
-        async function handleEmailSignUp() {
-            const email = document.getElementById("auth-email").value;
-            const password = document.getElementById("auth-password").value;
+        // 2. Check active session
+        const { data: { session }, error } = await supabase.auth.getSession();
 
-            if (!email || !password) {
-                authStatus.textContent = "Please fill out both email and password fields.";
-                authStatus.className = "mt-3 text-center fw-semibold small text-danger";
-                return;
-            }
-
-            authStatus.textContent = "Creating account...";
-            authStatus.className = "mt-3 text-center fw-semibold small text-dark";
-
-            const { data, error } = await supabase.auth.signUp({ email, password });
-
-            if (error) {
-                authStatus.textContent = "Sign-up error: " + error.message;
-                authStatus.className = "mt-3 text-center fw-semibold small text-danger";
-            } else {
-                authStatus.textContent = "Success! Check your email for a confirmation link.";
-                authStatus.className = "mt-3 text-center fw-semibold small text-success";
-                document.getElementById("auth-form").reset();
-            }
+        if (session) {
+            // Already logged in, head to dashboard
+            window.location.replace("dashboard.html");
+            return;
         }
 
-        // 3. Google OAuth Login Logic
-        async function startGoogleLogin() {
-            authStatus.textContent = "Redirecting to Google...";
-            authStatus.className = "mt-3 text-center fw-semibold small text-dark";
-            
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: "google",
-                options: { redirectTo: `${window.location.origin}/dashboard.html` }
-            });
-            if (error) {
-                authStatus.textContent = "Google error: " + error.message;
-                authStatus.className = "mt-3 text-center fw-semibold small text-danger";
-            }
+        // No session found, safely reveal the login form
+        loggedOutView.classList.remove("auth-dependent");
+
+        // Attach button listeners
+        document.getElementById("signin-email-btn")?.addEventListener("click", handleEmailSignIn);
+        document.getElementById("signup-email-btn")?.addEventListener("click", handleEmailSignUp);
+        document.getElementById("login-btn")?.addEventListener("click", startGoogleLogin);
+    }
+
+    async function handleEmailSignIn() {
+        const email = document.getElementById("auth-email").value;
+        const password = document.getElementById("auth-password").value;
+
+        if (!email || !password) {
+            authStatus.textContent = "Please fill out both email and password fields.";
+            authStatus.className = "mt-3 text-center fw-semibold small text-danger";
+            return;
         }
 
-        // 4. Session Check & Event Listener Attachments
-        async function runSessionCheck() {
-            const { data: { session } } = await supabase.auth.getSession();
-            const loggedOutView = document.getElementById("logged-out-view");
+        authStatus.textContent = "Signing in...";
+        authStatus.className = "mt-3 text-center fw-semibold small text-dark";
 
-            if (session) {
-                window.location.replace("dashboard.html");
-            } else {
-                loggedOutView.classList.remove("auth-dependent");
-            }
-        }
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-        // Ensure buttons hook up properly when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initApp);
+        if (error) {
+            authStatus.textContent = "Sign-in error: " + error.message;
+            authStatus.className = "mt-3 text-center fw-semibold small text-danger";
         } else {
-            initApp();
+            window.location.replace("dashboard.html");
+        }
+    }
+
+    async function handleEmailSignUp() {
+        const email = document.getElementById("auth-email").value;
+        const password = document.getElementById("auth-password").value;
+
+        if (!email || !password) {
+            authStatus.textContent = "Please fill out both email and password fields.";
+            authStatus.className = "mt-3 text-center fw-semibold small text-danger";
+            return;
         }
 
-        function initApp() {
-            runSessionCheck();
+        authStatus.textContent = "Creating account...";
+        authStatus.className = "mt-3 text-center fw-semibold small text-dark";
 
-            const signinBtn = document.getElementById("signin-email-btn");
-            const signupBtn = document.getElementById("signup-email-btn");
-            const googleBtn = document.getElementById("login-btn");
+        const { error } = await supabase.auth.signUp({ email, password });
 
-            if (signinBtn) signinBtn.addEventListener("click", handleEmailSignIn);
-            if (signupBtn) signupBtn.addEventListener("click", handleEmailSignUp);
-            if (googleBtn) googleBtn.addEventListener("click", startGoogleLogin);
+        if (error) {
+            authStatus.textContent = "Sign-up error: " + error.message;
+            authStatus.className = "mt-3 text-center fw-semibold small text-danger";
+        } else {
+            authStatus.textContent = "Success! Check your email for a confirmation link.";
+            authStatus.className = "mt-3 text-center fw-semibold small text-success";
+            document.getElementById("auth-form").reset();
         }
-    </script>
-</body>
-</html>
+    }
+
+    async function startGoogleLogin() {
+        authStatus.textContent = "Redirecting to Google...";
+        authStatus.className = "mt-3 text-center fw-semibold small text-dark";
+        
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: { redirectTo: `${window.location.origin}/dashboard.html` }
+        });
+        
+        if (error) {
+            authStatus.textContent = "Google error: " + error.message;
+            authStatus.className = "mt-3 text-center fw-semibold small text-danger";
+        }
+    }
+
+    // Run initialization on load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+        initApp();
+    }
+</script>

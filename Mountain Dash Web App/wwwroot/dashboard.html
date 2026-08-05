@@ -57,10 +57,10 @@
             </a>
 
             <div class="d-flex gap-2">
-                <a href="index.html" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-in-right"></i> Sign In</a>
+                <a href="index.html" class="btn btn-outline-light btn-sm" id="auth-nav-btn"><i class="bi bi-box-arrow-in-right"></i> Sign In</a>
                 <a href="payments.html" class="btn btn-outline-light btn-sm"><i class="bi bi-wallet2"></i> Payments</a>
                 <a href="profile.html" class="btn btn-outline-light btn-sm"><i class="bi bi-person-fill"></i> My Profile</a>
-                <button id="logout-btn" class="btn btn-danger btn-sm"><i class="bi bi-box-arrow-right"></i> Log Out</button>
+                <button id="logout-btn" class="btn btn-danger btn-sm d-none"><i class="bi bi-box-arrow-right"></i> Log Out</button>
             </div>
         </div>
     </nav>
@@ -204,35 +204,35 @@
 
         const SUPABASE_URL = "https://hxrhnemlxptlcvpvmpwu.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_U24SEjua7BNgn5cJID6QLQ_ZuR1Q1Vt";
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true
+            }
+        });
 
         let activeUser = null;
         const postJobBtn = document.getElementById("post-job-btn");
         const chatToggleBtn = document.getElementById("chat-toggle-btn");
+        const authNavBtn = document.getElementById("auth-nav-btn");
+        const logoutBtn = document.getElementById("logout-btn");
 
         function refreshAuthControls() {
             if (!activeUser) {
-                if (postJobBtn) {
-                    postJobBtn.disabled = true;
-                    postJobBtn.title = "Sign in to post a request";
-                    postJobBtn.classList.add("disabled");
+                if (authNavBtn) {
+                    authNavBtn.innerHTML = `<i class="bi bi-box-arrow-in-right"></i> Sign In`;
+                    authNavBtn.href = "index.html";
+                    authNavBtn.classList.remove("d-none");
                 }
-                if (chatToggleBtn) {
-                    chatToggleBtn.disabled = true;
-                    chatToggleBtn.style.display = "none";
-                }
+                if (logoutBtn) logoutBtn.classList.add("d-none");
+                if (chatToggleBtn) chatToggleBtn.style.display = "none";
                 return;
             }
 
-            if (postJobBtn) {
-                postJobBtn.disabled = false;
-                postJobBtn.title = "";
-                postJobBtn.classList.remove("disabled");
-            }
-            if (chatToggleBtn) {
-                chatToggleBtn.disabled = false;
-                chatToggleBtn.style.display = "inline-block";
-            }
+            if (authNavBtn) authNavBtn.classList.add("d-none");
+            if (logoutBtn) logoutBtn.classList.remove("d-none");
+            if (chatToggleBtn) chatToggleBtn.style.display = "inline-block";
         }
 
         async function fetchMarketplaceGigs() {
@@ -415,9 +415,9 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        async function checkAccess() {
+        async function initApp() {
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
+            if (session) {
                 window.location.replace("index.html");
                 return;
             }
@@ -457,7 +457,7 @@
         }
 
         function renderMessageHtml(msg) {
-            const isMe = msg.sender_email === activeUser.email;
+            const isMe = activeUser && msg.sender_email === activeUser.email;
             const alignClass = isMe ? "text-end" : "text-start";
             const bgClass = isMe ? "bg-primary text-white" : "bg-white text-dark border";
 
@@ -491,8 +491,7 @@
         function escapeChatHtml(str) { return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
         window.onload = () => {
-            checkAccess();
-            const logoutBtn = document.getElementById("logout-btn");
+            initApp();
             if (logoutBtn) {
                 logoutBtn.addEventListener("click", async () => {
                     await supabase.auth.signOut();
