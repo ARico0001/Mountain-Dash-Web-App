@@ -82,12 +82,13 @@
                     <i class="bi bi-plus-circle-fill me-2"></i>Post a Request
                 </button>
             </div>
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="btn-group" role="group" aria-label="Location Filter">
-                    <button type="button" class="btn btn-outline-primary active" data-filter="all">All Areas</button>
-                    <button type="button" class="btn btn-outline-primary" data-filter="san-bernardino">San Bernardino & L.A.</button>
-                    <button type="button" class="btn btn-outline-primary" data-filter="crestline">Crestline / Local</button>
-                </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="btn-group" role="group" aria-label="Location Filter">
+                <button type="button" class="btn btn-outline-primary active" data-filter="all">All Areas</button>
+                <button type="button" class="btn btn-outline-primary" data-filter="san-bernardino">San Bernardino</button>
+                <button type="button" class="btn btn-outline-primary" data-filter="mountains">Mountains</button>
             </div>
         </div>
 
@@ -288,8 +289,10 @@
                     primaryActionBtn = `<a href="profile.html" class="btn btn-outline-primary btn-sm w-100 fw-bold"><i class="bi bi-gear-fill me-1"></i>Manage My Post</a>`;
                 }
 
+                const locationSlug = job.region ? job.region.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'general';
+
                 return `
-                    <div class="col-md-6 col-lg-4" data-location="${job.region ? job.region.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'general'}">
+                    <div class="col-md-6 col-lg-4 job-item-col" data-location="${locationSlug}">
                         <div class="card h-100 shadow-sm job-card rounded-3 bg-white border-top border-4 border-primary">
                             <div class="card-body d-flex flex-column p-4">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
@@ -311,6 +314,7 @@
             }).join("");
 
             attachCardEventListeners();
+            applyActiveFilter();
         }
 
         function attachCardEventListeners() {
@@ -503,6 +507,19 @@
                 });
             }
         };
+
+        function applyActiveFilter() {
+            const activeFilterBtn = document.querySelector('.btn-group .btn.active');
+            const filter = activeFilterBtn ? activeFilterBtn.getAttribute('data-filter') : 'all';
+            
+            document.querySelectorAll('.job-item-col').forEach(card => {
+                if (filter === 'all' || card.getAttribute('data-location') === filter) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
     </script>
 
     <!-- Location Filter Script -->
@@ -514,7 +531,7 @@
 
                 const filter = this.getAttribute('data-filter');
                 
-                document.querySelectorAll('.col-md-6.col-lg-4').forEach(card => {
+                document.querySelectorAll('.job-item-col').forEach(card => {
                     if (filter === 'all' || card.getAttribute('data-location') === filter) {
                         card.style.display = 'block';
                     } else {
