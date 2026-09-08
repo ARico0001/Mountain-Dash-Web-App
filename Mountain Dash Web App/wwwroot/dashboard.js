@@ -10,42 +10,64 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     }
 });
 
-// Allow dashboard to load without login
-async function initDashboard() {
-    const { data: { session } } = await supabase.auth.getSession();
+// Centralized UI updater based on session state
+function updateAuthUI(session) {
+    const dashboardContent = document.getElementById("dashboard-content");
+    if (dashboardContent) {
+        dashboardContent.classList.remove("d-none");
+    }
 
-    // Show dashboard content no matter what
-    document.getElementById("dashboard-content").classList.remove("d-none");
+    const userNameEl = document.getElementById("user-name");
+    const authElements = document.querySelectorAll(".requires-auth");
 
-    if (session) {
-        // Logged-in user
-        loadUser(session.user);
-
-        // Show logged-in features
-        document.querySelectorAll(".requires-auth").forEach(el => {
-            el.classList.remove("d-none");
-        });
-
+    if (session && session.user) {
+        if (userNameEl) {
+            userNameEl.textContent = session.user.email || "Authenticated User";
+        }
+        authElements.forEach((el) => el.classList.remove("d-none"));
     } else {
-        // Guest user
-        document.getElementById("user-name").textContent = "Guest";
-
-        // Hide logged-in features
-        document.querySelectorAll(".requires-auth").forEach(el => {
-            el.classList.add("d-none");
-        });
+        if (userNameEl) {
+            userNameEl.textContent = "Guest";
+        }
+        authElements.forEach((el) => el.classList.add("d-none"));
     }
 }
 
-initDashboard();
+// Initialize Dashboard & Live Auth Listener
+async function initDashboard() {
+    try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
 
-// Logout button (only works if logged in)
-document.getElementById("logout-btn")?.addEventListener("click", async () => {
-    await supabase.auth.signOut();
-    window.location.replace("index.html");
-});
+        updateAuthUI(session);
 
-// Example: load user data
-function loadUser(user) {
-    document.getElementById("user-name").textContent = user.email;
+        // Listen for live sign-in/sign-out events
+        supabase.auth.onAuthStateChange((event, currentSession) => {
+            updateAuthUI(currentSession);
+        });
+    } catch (err) {
+        console.error("Error initializing auth session:", err?.message ?? err);
+        updateAuthUI(null);
+    }
+}
+
+// Handle Logout
+const logoutBtn = document.getElementById("logout-btn");
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            window.location.href = "index.html";
+        } catch (err) {
+            console.error("Error signing out:", err?.message ?? err);
+        }
+    });
+}
+
+// Safe execution regardless of load timing
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initDashboard);
+} else {
+    initDashboard();
 }
