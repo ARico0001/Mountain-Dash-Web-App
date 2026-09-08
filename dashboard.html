@@ -57,7 +57,7 @@
             </a>
 
             <div class="d-flex gap-2">
-                <a href="index.html" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-in-right"></i> Sign In</a>
+                <a href="signin.html" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-in-right"></i> Sign In</a>
                 <a href="payments.html" class="btn btn-outline-light btn-sm"><i class="bi bi-wallet2"></i> Payments</a>
                 <a href="profile.html" class="btn btn-outline-light btn-sm"><i class="bi bi-person-fill"></i> My Profile</a>
                 <button id="logout-btn" class="btn btn-danger btn-sm"><i class="bi bi-box-arrow-right"></i> Log Out</button>
@@ -265,7 +265,7 @@
                 let categoryBadge = job.category ? `<span class="badge bg-secondary text-light mb-2">${escapeHtml(job.category)}</span>` : '';
                 let primaryActionBtn = currentUserEmail
                     ? `<button type="button" class="btn btn-success btn-sm w-100 fw-bold action-claim-btn" data-job-id="${job.id}">Claim This Gig</button>`
-                    : `<a href="index.html" class="btn btn-outline-primary btn-sm w-100 fw-bold"><i class="bi bi-box-arrow-in-right me-1"></i>Sign in to claim</a>`;
+                    : `<a href="signin.html" class="btn btn-outline-primary btn-sm w-100 fw-bold"><i class="bi bi-box-arrow-in-right me-1"></i>Sign in to claim</a>`;
 
                 if (job.status === "pending") {
                     badgeStatus = `<span class="badge bg-warning text-dark">Claimed • In Progress</span>`;
@@ -280,7 +280,7 @@
                             primaryActionBtn = `<button class="btn btn-dark btn-sm w-100 fw-bold action-backup-btn" data-job-id="${job.id}">Join Backup Line</button>`;
                         }
                     } else {
-                        primaryActionBtn = `<a href="index.html" class="btn btn-outline-primary btn-sm w-100 fw-bold"><i class="bi bi-box-arrow-in-right me-1"></i>Sign in to claim</a>`;
+                        primaryActionBtn = `<a href="signin.html" class="btn btn-outline-primary btn-sm w-100 fw-bold"><i class="bi bi-box-arrow-in-right me-1"></i>Sign in to claim</a>`;
                     }
                 }
 
